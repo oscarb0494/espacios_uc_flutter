@@ -27,6 +27,7 @@ class _HorariosRecursosPageState extends State<HorariosRecursosPage> {
   Map? hData;
   List? recursosData;
   List? horariosData;
+  List<DataRow>? filas;
 
   getRecursos() async {
     http.Response response = await http
@@ -35,10 +36,21 @@ class _HorariosRecursosPageState extends State<HorariosRecursosPage> {
     data = json.decode(response.body);
     setState(() {
       recursosData = data!['recursos'];
+
       print(recursosData);
     });
 
     debugPrint(response.body);
+  }
+
+  List<DataRow> _createRows() {
+    return recursosData!
+        .map((recurso) => DataRow(cells: [
+              DataCell(Text(recurso['nombre'])),
+              DataCell(Text(recurso['estado'])),
+              DataCell(Text(recurso['prestable'].toString()))
+            ]))
+        .toList();
   }
 
   getHorarios() async {
@@ -90,51 +102,16 @@ class _HorariosRecursosPageState extends State<HorariosRecursosPage> {
                   appointmentDisplayMode:
                       MonthAppointmentDisplayMode.appointment),
             )),
-            ListView.builder(
-                itemCount: recursosData == null ? 0 : recursosData?.length,
-                itemBuilder: (BuildContext context, int index) {
-                  return Container(
-                    child: GestureDetector(
-                      onTap: () => {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  HorariosRecursosPage(id: 1)),
-                        )
-                      },
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Row(children: <Widget>[
-                            Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Text(
-                                "$index",
-                                style: TextStyle(
-                                    fontSize: 20.0,
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                  "https://res.cloudinary.com/universidaddecaldasflutter/image/upload/v1670993347/admisiones_1_bvflng.jpg"),
-                            ),
-                            Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: Text(
-                                  "${recursosData![index]["nombre"]} ${recursosData![index]["estado"]}",
-                                  style: TextStyle(
-                                      fontSize: 20.0,
-                                      fontWeight: FontWeight.w700),
-                                ))
-                            //Text("${sedesData![index]["id"]}")
-                          ]),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+            DataTable(
+              sortColumnIndex: 2,
+              sortAscending: false,
+              columns: [
+                DataColumn(label: Text("Nombre")),
+                DataColumn(label: Text("Estado")),
+                DataColumn(label: Text("Prestable"), numeric: true),
+              ],
+              rows: _createRows(),
+            )
           ],
         ),
       ),
